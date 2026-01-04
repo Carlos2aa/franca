@@ -16,6 +16,7 @@
     --success: #2ecc71;
     --danger: #e74c3c;
     --highlight-blue: rgba(0, 85, 164, 0.2);
+    --pix-bg: #2a2a35;
   }
 
   body {
@@ -29,7 +30,6 @@
 
   h2 { border-left: 5px solid var(--primary); padding-left: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
   
-  /* Estilo para os créditos */
   .creditos {
     font-size: 0.8rem;
     color: #666;
@@ -59,6 +59,20 @@
   .form-group { display: flex; flex-direction: column; }
 
   label { font-size: 0.75rem; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: bold; }
+  .required { color: var(--secondary); margin-left: 4px; }
+
+  /* Estilo do destaque do Pix */
+  .destaque-pix {
+    background: var(--pix-bg);
+    color: #fff;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #f39c12;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: block;
+  }
 
   input, select {
     background: #25252b;
@@ -133,7 +147,7 @@
 
   .btn-primary { background: var(--primary); color: white; margin-bottom: 10px; width: 100%; }
   .btn-primary:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
-  .btn-primary:disabled { background: #333; color: #777; cursor: not-allowed; }
+  .btn-primary:disabled { background: #333; color: #777; cursor: not-allowed; opacity: 0.6; }
 
   .btn-sec { background: var(--secondary); color: white; width: 100%; }
   .btn-brinde { background: #f39c12; color: white; margin-bottom: 15px; }
@@ -170,11 +184,11 @@
 <div class="secao">
   <div class="grid-form">
     <div class="form-group">
-      <label>ID do Vendedor</label>
+      <label>ID do Vendedor <span class="required">*</span></label>
       <input id="codigoVendedor" placeholder="Digite seu ID" oninput="validarCampos()">
     </div>
     <div class="form-group">
-      <label>Nome do Vendedor</label>
+      <label>Nome do Vendedor <span class="required">*</span></label>
       <input id="nomeVendedorManual" placeholder="Digite seu Nome" oninput="validarCampos()">
     </div>
   </div>
@@ -188,9 +202,9 @@
       </select>
     </div>
     <div class="form-group">
-      <label id="labelDinamica">Comprador / ID</label>
-      <input id="comprador" placeholder="Nome ou Passaporte">
-      <input id="faccao" placeholder="Nome da Org" style="display:none">
+      <label id="labelDinamica">Comprador / ID <span class="required">*</span></label>
+      <input id="comprador" placeholder="Nome ou Passaporte" oninput="validarCampos()">
+      <input id="faccao" placeholder="Nome da Org" style="display:none" oninput="validarCampos()">
     </div>
   </div>
 </div>
@@ -231,7 +245,7 @@
   
   <hr>
   
-  <label>📎 Comprovante de Pagamento (Obrigatório)</label>
+  <span class="destaque-pix">📎 COMPROVANTE DE PAGAMENTO (OBRIGATÓRIO) PARA O PIX 680</span>
   <input type="file" id="comprovante" accept="image/*" style="margin-bottom: 20px; width: 100%; border: none; background: transparent; padding: 0;">
 
   <div class="grid-form">
@@ -282,14 +296,29 @@ armas.forEach((a,i)=>{
 function validarCampos(){
  const id = document.getElementById('codigoVendedor').value.trim();
  const nome = document.getElementById('nomeVendedorManual').value.trim();
- document.getElementById('btnResumo').disabled = (id === "" || nome === "");
+ const isPista = document.getElementById('tipoVenda').value === "pista";
+ 
+ let temArma = false;
+ armas.forEach((_,i)=>{
+  if(Number(document.getElementById(`qtd${i}`).value) > 0) temArma = true;
+ });
+ 
+ let clienteValido = false;
+ if(isPista) {
+   clienteValido = document.getElementById('comprador').value.trim() !== "";
+ } else {
+   clienteValido = document.getElementById('faccao').value.trim() !== "";
+ }
+
+ document.getElementById('btnResumo').disabled = (id === "" || nome === "" || !clienteValido || !temArma);
 }
 
 function alternarCampos(){
  const isPista = tipoVenda.value === "pista";
- labelDinamica.innerText = isPista ? "Comprador / ID" : "Facção";
+ labelDinamica.innerHTML = isPista ? 'Comprador / ID <span class="required">*</span>' : 'Facção <span class="required">*</span>';
  comprador.style.display = isPista ? "block" : "none";
  faccao.style.display = isPista ? "none" : "block";
+ validarCampos();
 }
 
 function calcular(){
@@ -307,6 +336,7 @@ function calcular(){
  const comissao = total * 0.3;
  document.getElementById("total").innerText=format(total);
  document.getElementById("totalComissao").innerText=format(comissao);
+ validarCampos();
 }
 
 function abrirBrinde(){
@@ -413,6 +443,7 @@ function novaVenda(){
  document.getElementById("total").innerText="R$ 0";
  document.getElementById("totalComissao").innerText="R$ 0";
  comprovante.value = ""; 
+ validarCampos();
 }
 </script>
 
